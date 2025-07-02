@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>はじめてのえいご</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800&display=swap');
+
+        :root {
+            --bg-color: #fdf0d5; 
+            --primary-color: #48cae4;
+            --secondary-color: #ff6b6b;
+            --accent-color: #f9c74f;
+            --text-color: #3d405b;
+            --white: #ffffff;
+        }
+        html, body {
+            margin: 0;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 【修正】スクロールできるようにレイアウトを調整 */
+        .screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            min-height: 100vh; /* 画面が短くても高さを確保 */
+            box-sizing: border-box;
+            padding: 20px 10px;
+        }
+        #flashcard-screen {
+             justify-content: center; /* カード画面は中央揃えを維持 */
+        }
+        .hidden { display: none; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: var(--primary-color); margin: 0 0 1rem 0; }
+        
+        button {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            font-weight: 700; font-size: 1.3rem; padding: 15px 24px;
+            border-radius: 50px; border: none; cursor: pointer;
+            color: var(--text-color); margin-top: 10px;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            box-shadow: 0 5px 0 #d4a373;
+        }
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #d4a373;
+        }
+        
+        /* スタート画面 */
+        #mode-selection { background: #fff; border-radius: 10px; padding: 10px; margin-bottom: 1.5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #mode-selection label { font-size: 1.1rem; margin: 0 10px; }
+        #category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 15px; width: 100%; max-width: 500px;
+            margin-bottom: 1.5rem;
+        }
+        .category-button {
+            font-size: 1rem; font-weight: bold;
+            padding: 12px 5px; border-radius: 15px;
+            color: white;
+        }
+        /* カテゴリーの色分け */
+        .cat-animals { background-color: #28a745; } .cat-foods { background-color: #dc3545; }
+        .cat-colors { background-color: #fd7e14; } .cat-numbers { background-color: #17a2b8; }
+        .cat-school { background-color: #6f42c1; } .cat-actions { background-color: #ff69b4; }
+        .cat-body { background-color: #e83e8c; } .cat-family { background-color: #20c997; }
+        .cat-nature { background-color: #007bff; } .cat-clothes { background-color: #6610f2; }
+        .cat-shapes { background-color: #ff4757; } .cat-adjectives { background-color: #343a40; }
+        .cat-vehicles { background-color: #6c757d; } .cat-jobs { background-color: #198754; }
+        .cat-places { background-color: #fd7e14; } .cat-insects { background-color: #d63384; }
+        .cat-vegetables { background-color: #28a745; } .cat-sports { background-color: #0d6efd; }
+        .cat-instruments { background-color: #8f7763; } .cat-stationery { background-color: #6f42c1; }
+        .cat-days { background-color: #ffc107; } .cat-weather { background-color: #48cae4; }
+        .cat-countries { background-color: #0dcaf0; } .cat-seasons { background-color: #dc3545; }
+
+        /* フラッシュカード画面 */
+        .card-container {
+            perspective: 1000px;
+            width: 90vw; max-width: 350px;
+            height: 70vw; max-height: 280px;
+            margin-top: 1rem;
+        }
+        .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
+        .card.manual-mode { cursor: pointer; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: 20px;
+            background: var(--white); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .card-face-back { transform: rotateY(180deg); }
+        .card-emoji { font-size: 5rem; }
+        .card-text { font-size: 2.5rem; font-weight: bold; }
+        
+        .nav-buttons { display: flex; justify-content: center; gap: 20px; width: 100%; max-width: 400px; margin-top: 2rem; }
+        .nav-buttons button { background-color: var(--secondary-color); width: 150px; margin-top: 0; }
+        .play-pause-button { background-color: var(--accent-color); }
+        
+        @media (max-width: 480px) {
+            h1 { font-size: 2.2rem; }
+            .card-emoji { font-size: 4rem; }
+            .card-text { font-size: 2rem; }
+            .nav-buttons button { width: 130px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="category-screen" class="screen">
+        <h1>はじめてのえいご</h1>
+        <div id="mode-selection">
+            <label><input type="radio" name="mode" value="manual" checked> タップでべんきょう</label>
+            <label><input type="radio" name="mode" value="auto"> 自動できく</label>
+        </div>
+        <div id="category-grid">
+            <button class="category-button cat-animals" data-category="animals">どうぶつ 🦁</button>
+            <button class="category-button cat-foods" data-category="foods">たべもの 🍓</button>
+            <button class="category-button cat-vegetables" data-category="vegetables">やさい 🥕</button>
+            <button class="category-button cat-colors" data-category="colors">いろ 🎨</button>
+            <button class="category-button cat-numbers" data-category="numbers">かず 🔢</button>
+            <button class="category-button cat-shapes" data-category="shapes">かたち ⭐</button>
+            <button class="category-button cat-actions" data-category="actions">うごき 💪</button>
+            <button class="category-button cat-adjectives" data-category="adjectives">ようす ✨</button>
+            <button class="category-button cat-body" data-category="body">からだ 👀</button>
+            <button class="category-button cat-family" data-category="family">かぞく 👨‍👩‍👧</button>
+            <button class="category-button cat-nature" data-category="nature">しぜん 🌳</button>
+            <button class="category-button cat-weather" data-category="weather">てんき ☀️</button>
+            <button class="category-button cat-clothes" data-category="clothes">ふく 👕</button>
+            <button class="category-button cat-school" data-category="school">がっこう 🏫</button>
+            <button class="category-button cat-stationery" data-category="stationery">ぶんぼうぐ ✏️</button>
+            <button class="category-button cat-vehicles" data-category="vehicles">のりもの 🚗</button>
+            <button class="category-button cat-places" data-category="places">ばしょ 🗼</button>
+            <button class="category-button cat-jobs" data-category="jobs">おしごと 🧑‍⚕️</button>
+            <button class="category-button cat-insects" data-category="insects">むし 🐞</button>
+            <button class="category-button cat-sports" data-category="sports">スポーツ ⚽</button>
+            <button class="category-button cat-instruments" data-category="instruments">がっき 🎹</button>
+            <button class="category-button cat-days" data-category="days">ようび 📅</button>
+            <button class="category-button cat-seasons" data-category="seasons">きせつ 🌸</button>
+            <button class="category-button cat-countries" data-category="countries">くに 🇯🇵</button>
+            <button class="category-button cat-directions" data-category="directions">ほうこう 🧭</button>
+        </div>
+        </div>
+
+    <div id="flashcard-screen" class="screen hidden">
+        <div class="card-container">
+            <div id="card" class="card">
+                <div class="card-face card-face-front">
+                    <div id="front-emoji" class="card-emoji"></div>
+                    <div id="front-text" class="card-text"></div>
+                </div>
+                <div class="card-face card-face-back">
+                    <div id="back-text" class="card-text"></div>
+                </div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button class="back-button">もどる</button>
+            <button id="next-card" class="nav-button">つぎへ</button>
+            <button id="play-pause-button" class="play-pause-button nav-button hidden">いちじていし</button>
+        </div>
+    </div>
+    
+    <script>
+        // --- 単語データ (長いので省略) ---
+        const wordData={animals:[{emoji:"🐶",en:"dog",ja:"いぬ"},{emoji:"🐱",en:"cat",ja:"ねこ"},{emoji:"🐰",en:"rabbit",ja:"うさぎ"},{emoji:"🦁",en:"lion",ja:"ライオン"},{emoji:"🐘",en:"elephant",ja:"ぞう"},{emoji:"🐵",en:"monkey",ja:"さる"},{emoji:"🐼",en:"panda",ja:"パンダ"},{emoji:"🐦",en:"bird",ja:"とり"},{emoji:"🐭",en:"mouse",ja:"ねずみ"},{emoji:"🐻",en:"bear",ja:"くま"},{emoji:"🐷",en:"pig",ja:"ぶた"},{emoji:"🐟",en:"fish",ja:"さかな"},{emoji:"🐴",en:"horse",ja:"うま"},{emoji:"🦒",en:"giraffe",ja:"きりん"},{emoji:"🐑",en:"sheep",ja:"ひつじ"},{emoji:"🐢",en:"turtle",ja:"かめ"}],foods:[{emoji:"🍎",en:"apple",ja:"りんご"},{emoji:"🍓",en:"strawberry",ja:"いちご"},{emoji:"🍊",en:"orange",ja:"みかん"},{emoji:"🍇",en:"grape",ja:"ぶどう"},{emoji:"🍌",en:"banana",ja:"バナナ"},{emoji:"🍉",en:"watermelon",ja:"すいか"},{emoji:"🍑",en:"peach",ja:"もも"},{emoji:"🍒",en:"cherry",ja:"さくらんぼ"},{emoji:"🍞",en:"bread",ja:"パン"},{emoji:"🍚",en:"rice",ja:"ごはん"},{emoji:"🥛",en:"milk",ja:"ぎゅうにゅう"},{emoji:"🍰",en:"cake",ja:"ケーキ"},{emoji:"🥚",en:"egg",ja:"たまご"},{emoji:"🧀",en:"cheese",ja:"チーズ"},{emoji:"🍦",en:"ice cream",ja:"アイス"}],vegetables:[{emoji:"🥕",en:"carrot",ja:"にんじん"},{emoji:"🍅",en:"tomato",ja:"トマト"},{emoji:"🥔",en:"potato",ja:"じゃがいも"},{emoji:"🥒",en:"cucumber",ja:"きゅうり"},{emoji:"🧅",en:"onion",ja:"たまねぎ"},{emoji:"🌽",en:"corn",ja:"とうもろこし"}],colors:[{emoji:"🔴",en:"red",ja:"あか"},{emoji:"🔵",en:"blue",ja:"あお"},{emoji:"🟡",en:"yellow",ja:"きいろ"},{emoji:"🟢",en:"green",ja:"みどり"},{emoji:"⚫️",en:"black",ja:"くろ"},{emoji:"⚪️",en:"white",ja:"しろ"},{emoji:"🩷",en:"pink",ja:"ピンク"},{emoji:"🧡",en:"orange",ja:"オレンジ"},{emoji:"🟣",en:"purple",ja:"むらさき"},{emoji:"🟤",en:"brown",ja:"ちゃいろ"}],numbers:function(){const t=[];for(let n=0;n<=100;n++)t.push({emoji:String(n),en:((t,e)=>{if(t<0||t>100)return"";const n=["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"],o=["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];return t<20?n[t]:100===t?"one hundred":o[Math.floor(t/10)]+(t%10>0?"-"+n[t%10]:"")})(n),ja:((t,e)=>{if(t>100)return String(t);if(0===t)return"れい";const n=["","いち","に","さん","よん","ご","ろく","なな","はち","きゅう"],o=["","じゅう","にじゅう","さんじゅう","よんじゅう","ごじゅう","ろくじゅう","ななじゅう","はちじゅう","きゅうじゅう"];if(t<10)return n[t];if(10===t)return"じゅう";if(t<100){const e=Math.floor(t/10),a=t%10;let r=1===e?"じゅう":o[e];return r+=n[a],r}return 100===t?"ひゃく":void 0})(n)});return t}(),shapes:[{emoji:"❤️",en:"heart",ja:"ハート"},{emoji:"⭐",en:"star",ja:"ほし"},{emoji:"⭕",en:"circle",ja:"まる"},{emoji:"❌",en:"cross",ja:"ばつ"},{emoji:"🔼",en:"triangle",ja:"さんかく"},{emoji:"⏹️",en:"square",ja:"しかく"}],school:[{emoji:"🏫",en:"school",ja:"がっこう"},{emoji:"📖",en:"book",ja:"ほん"},{emoji:"🎒",en:"bag",ja:"かばん"},{emoji:"🧑‍🏫",en:"teacher",ja:"せんせい"},{emoji:"🧑‍🎓",en:"student",ja:"せいと"},{emoji:"椅子",en:"chair",ja:"いす"},{emoji:"机",en:"desk",ja:"つくえ"}],stationery:[{emoji:"✏️",en:"pencil",ja:"えんぴつ"},{emoji:"✒️",en:"pen",ja:"ペン"},{emoji:"Crayon",en:"crayon",ja:"クレヨン"},{emoji:"✂️",en:"scissors",ja:"はさみ"},{emoji:"📏",en:"ruler",ja:"ものさし"},{emoji:"ノート",en:"notebook",ja:"ノート"}],actions:[{emoji:"🏃",en:"run",ja:"はしる"},{emoji:"🚶",en:"walk",ja:"あるく"},{emoji:"✈️",en:"fly",ja:"とぶ"},{emoji:"🏊",en:"swim",ja:"およぐ"},{emoji:"😋",en:"eat",ja:"たべる"},{emoji:"😴",en:"sleep",ja:"ねる"},{emoji:"😄",en:"laugh",ja:"わらう"},{emoji:"😢",en:"cry",ja:"なく"},{emoji:"📖",en:"read",ja:"よむ"},{emoji:"✍️",en:"write",ja:"かく"},{emoji:"🎤",en:"sing",ja:"うたう"},{emoji:"💃",en:"dance",ja:"おどる"},{emoji:"👏",en:"clap",ja:"てをたたく"}],adjectives:[{emoji:"👍",en:"good",ja:"よい"},{emoji:"😞",en:"sad",ja:"かなしい"},{emoji:"😄",en:"happy",ja:"うれしい"},{emoji:"😠",en:"angry",ja:"おこった"},{emoji:"🐘",en:"big",ja:"おおきい"},{emoji:"🐭",en:"small",ja:"ちいさい"},{emoji:"🔥",en:"hot",ja:"あつい"},{emoji:"🥶",en:"cold",ja:"さむい"},{emoji:"🐰",en:"fast",ja:"はやい"},{emoji:"🐢",en:"slow",ja:"おそい"}],body:[{emoji:"👀",en:"eye",ja:"め"},{emoji:"👃",en:"nose",ja:"はな"},{emoji:"👄",en:"mouth",ja:"くち"},{emoji:"👂",en:"ear",ja:"みみ"},{emoji:"👋",en:"hand",ja:"て"},{emoji:"🦶",en:"foot",ja:"あし"},{emoji:"🙂",en:"face",ja:"かお"},{emoji:"💪",en:"arm",ja:"うで"}],family:[{emoji:"👨",en:"father",ja:"おとうさん"},{emoji:"👩",en:"mother",ja:"おかあさん"},{emoji:"👦",en:"boy",ja:"おとこのこ"},{emoji:"👧",en:"girl",ja:"おんなのこ"},{emoji:"👶",en:"baby",ja:"あかちゃん"},{emoji:"🧑‍🤝‍🧑",en:"friend",ja:"ともだち"}],nature:[{emoji:"☀️",en:"sun",ja:"たいよう"},{emoji:"🌙",en:"moon",ja:"つき"},{emoji:"⭐",en:"star",ja:"ほし"},{emoji:"🌸",en:"flower",ja:"はな"},{emoji:"🌳",en:"tree",ja:"き"},{emoji:"☁️",en:"cloud",ja:"くも"},{emoji:"💧",en:"rain",ja:"あめ"},{emoji:"🌊",en:"sea",ja:"うみ"}],weather:[{emoji:"☀️",en:"sunny",ja:"はれ"},{emoji:"☁️",en:"cloudy",ja:"くもり"},{emoji:"☔",en:"rainy",ja:"あめ"},{emoji:"☃️",en:"snowy",ja:"ゆき"},{emoji:"🌬️",en:"windy",ja:"かぜ"},{emoji:"🌈",en:"rainbow",ja:"にじ"}],clothes:[{emoji:"👕",en:"shirt",ja:"シャツ"},{emoji:"👖",en:"pants",ja:"ズボン"},{emoji:"👗",en:"dress",ja:"ドレス"},{emoji:"👟",en:"shoes",ja:"くつ"},{emoji:"🧢",en:"cap",ja:"ぼうし"},{emoji:"🧦",en:"socks",ja:"くつした"}],vehicles:[{emoji:"🚗",en:"car",ja:"じどうしゃ"},{emoji:"🚌",en:"bus",ja:"バス"},{emoji:"🚆",en:"train",ja:"でんしゃ"},{emoji:"✈️",en:"airplane",ja:"ひこうき"},{emoji:"🚢",en:"ship",ja:"ふね"},{emoji:"🚲",en:"bicycle",ja:"じてんしゃ"}],places:[{emoji:"🏠",en:"house",ja:"いえ"},{emoji:"🏫",en:"school",ja:"がっこう"},{emoji:"🏞️",en:"park",ja:"こうえん"},{emoji:"🏥",en:"hospital",ja:"びょういん"},{emoji:"🏦",en:"bank",ja:"ぎんこう"},{emoji:"🗼",en:"tower",ja:"タワー"}],jobs:[{emoji:"🧑‍⚕️",en:"doctor",ja:"いしゃ"},{emoji:"👮",en:"police officer",ja:"けいさつかん"},{emoji:"🧑‍🚒",en:"firefighter",ja:"しょうぼうし"},{emoji:"🧑‍🏫",en:"teacher",ja:"せんせい"},{emoji:"🧑‍🍳",en:"chef",ja:"コックさん"}],insects:[{emoji:"🦋",en:"butterfly",ja:"ちょう"},{emoji:"🐞",en:"ladybug",ja:"てんとうむし"},{emoji:"🐜",en:"ant",ja:"あり"},{emoji:"🐝",en:"bee",ja:"はち"},{emoji:"🐛",en:"caterpillar",ja:"いもむし"}],sports:[{emoji:"⚽",en:"soccer",ja:"サッカー"},{emoji:"⚾",en:"baseball",ja:"やきゅう"},{emoji:"🏀",en:"basketball",ja:"バスケ"},{emoji:"🎾",en:"tennis",ja:"テニス"},{emoji:"🏊",en:"swimming",ja:"すいえい"}],instruments:[{emoji:"🎹",en:"piano",ja:"ピアノ"},{emoji:"🎸",en:"guitar",ja:"ギター"},{emoji:"🥁",en:"drum",ja:"たいこ"},{emoji:"🎺",en:"trumpet",ja:"トランペット"},{emoji:"🎻",en:"violin",ja:"バイオリン"}],days:[{emoji:"🇲",en:"Monday",ja:"げつようび"},{emoji:"🇹",en:"Tuesday",ja:"かようび"},{emoji:"🇼",en:"Wednesday",ja:"すいようび"},{emoji:"🇹",en:"Thursday",ja:"もくようび"},{emoji:"🇫",en:"Friday",ja:"きんようび"},{emoji:"🇸",en:"Saturday",ja:"どようび"},{emoji:"🇸",en:"Sunday",ja:"にちようび"}],seasons:[{emoji:"🌸",en:"spring",ja:"はる"},{emoji:"☀️",en:"summer",ja:"なつ"},{emoji:"🍂",en:"fall",ja:"あき"},{emoji:"☃️",en:"winter",ja:"ふゆ"}],countries:[{emoji:"🇯🇵",en:"Japan",ja:"にほん"},{emoji:"🇺🇸",en:"America",ja:"アメリカ"},{emoji:"🇬🇧",en:"England",ja:"イギリス"},{emoji:"🇨🇳",en:"China",ja:"ちゅうごく"}],directions:[{emoji:"⬆️",en:"up",ja:"うえ"},{emoji:"⬇️",en:"down",ja:"した"},{emoji:"⬅️",en:"left",ja:"ひだり"},{emoji:"➡️",en:"right",ja:"みぎ"}]};
+
+        // --- アプリのロジック ---
+        const categoryScreen=document.getElementById("category-screen"),flashcardScreen=document.getElementById("flashcard-screen"),card=document.getElementById("card"),nextButton=document.getElementById("next-card"),playPauseButton=document.getElementById("play-pause-button"),modeRadios=document.querySelectorAll('input[name="mode"]'),backButtons=document.querySelectorAll(".back-button");
+        let learningMode="manual",currentWords=[],currentIndex=0,isAutoPlaying=!1,autoPlayTimer;
+        
+        // --- 初期化とイベントリスナー ---
+        function initialize() {
+            modeRadios.forEach(t=>t.addEventListener("change",e=>{learningMode=e.target.value}));
+            document.querySelectorAll(".category-button").forEach(t=>{t.addEventListener("click",()=>{currentCategory=t.dataset.category,currentWords=wordData[currentCategory],currentIndex=0,showScreen("flashcard-screen"),"manual"===learningMode?(card.classList.add("manual-mode"),playPauseButton.classList.add("hidden"),nextButton.classList.remove("hidden"),displayCard(),speak(currentWords[currentIndex].ja,"ja-JP")):(card.classList.remove("manual-mode"),isAutoPlaying=!0,playPauseButton.textContent="いちじていし",playPauseButton.classList.remove("hidden"),nextButton.classList.add("hidden"),autoPlayFlow())})});
+            playPauseButton.addEventListener("click",toggleAutoPlay);
+            card.addEventListener("click",()=>{if("manual"!==learningMode)return;const t=card.classList.contains("is-flipped"),e=currentWords[currentIndex];card.classList.toggle("is-flipped"),t?speak(e.ja,"ja-JP"):speak(e.en,"en-US")});
+            nextButton.addEventListener("click",()=>{currentIndex++,currentIndex>=currentWords.length&&(currentIndex=0),displayCard(),speak(currentWords[currentIndex].ja,"ja-JP")});
+            backButtons.forEach(t=>t.addEventListener("click",()=>{isAutoPlaying=!1,clearTimeout(autoPlayTimer),window.speechSynthesis.cancel(),showScreen("category-screen")}));
+        }
+
+        // --- コア機能 ---
+        function showScreen(t){categoryScreen.classList.add("hidden"),flashcardScreen.classList.add("hidden"),document.getElementById(t).classList.remove("hidden")}
+        function displayCard(){const t=currentWords[currentIndex];document.getElementById("front-emoji").textContent=t.emoji,document.getElementById("front-text").textContent=t.ja,document.getElementById("back-text").textContent=t.en,card.classList.remove("is-flipped")}
+        
+        function speak(t,e,o){
+            window.speechSynthesis.cancel();
+            const n=new SpeechSynthesisUtterance(t);
+            n.lang=e;
+            if ("function"==typeof o) n.onend=o;
+            window.speechSynthesis.speak(n);
+        }
+        
+        function autoPlayFlow(){
+            if(!isAutoPlaying||0===currentWords.length)return;
+            displayCard();
+            const t=currentWords[currentIndex];
+            speak(t.ja,"ja-JP",()=>{
+                if(!isAutoPlaying)return;
+                autoPlayTimer=setTimeout(()=>{
+                    card.classList.add("is-flipped");
+                    speak(t.en,"en-US",()=>{
+                        if(!isAutoPlaying)return;
+                        currentIndex++;
+                        if(currentIndex>=currentWords.length) currentIndex=0;
+                        autoPlayTimer=setTimeout(autoPlayFlow,1e3);
+                    });
+                },1e3);
+            });
+        }
+        
+        function toggleAutoPlay(){
+            isAutoPlaying=!isAutoPlaying;
+            if(isAutoPlaying){
+                playPauseButton.textContent="いちじていし";
+                autoPlayFlow();
+            } else {
+                playPauseButton.textContent="さいせい";
+                clearTimeout(autoPlayTimer);
+                window.speechSynthesis.cancel();
+            }
+        }
+        
+        initialize();
+    </script>
+</body>
+</html>
