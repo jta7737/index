@@ -176,23 +176,18 @@
         const categoryScreen=document.getElementById("category-screen"),flashcardScreen=document.getElementById("flashcard-screen"),card=document.getElementById("card"),nextButton=document.getElementById("next-card"),playPauseButton=document.getElementById("play-pause-button"),modeRadios=document.querySelectorAll('input[name="mode"]'),backButtons=document.querySelectorAll(".back-button");
         let learningMode="manual",currentWords=[],currentIndex=0,isAutoPlaying=!1,autoPlayTimer;
         
-        // ▼▼▼ 変更箇所1 ▼▼▼
         let googleJaVoice = null, googleEnVoice = null;
 
-        // 利用可能なGoogle音声を探して変数に格納する関数
         function setGoogleVoices() {
             const voices = window.speechSynthesis.getVoices();
-            // 特定の名前のGoogle音声を探す。見つからなければ、言語が一致する他のGoogle音声を探す
             googleJaVoice = voices.find(v => v.name === 'Google 日本語') || voices.find(v => v.lang === 'ja-JP' && v.name.includes('Google'));
             googleEnVoice = voices.find(v => v.name === 'Google US English') || voices.find(v => v.lang === 'en-US' && v.name.includes('Google'));
         }
 
-        // 最初に一度実行し、その後は音声リストが変更されたときに再度実行する
         setGoogleVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = setGoogleVoices;
         }
-        // ▲▲▲ 変更箇所1 ▲▲▲
         
         // --- 初期化とイベントリスナー ---
         function initialize() {
@@ -208,23 +203,29 @@
         function showScreen(t){categoryScreen.classList.add("hidden"),flashcardScreen.classList.add("hidden"),document.getElementById(t).classList.remove("hidden")}
         function displayCard(){const t=currentWords[currentIndex];document.getElementById("front-emoji").textContent=t.emoji,document.getElementById("front-text").textContent=t.ja,document.getElementById("back-text").textContent=t.en,card.classList.remove("is-flipped")}
         
-        // ▼▼▼ 変更箇所2 ▼▼▼
+        // ▼▼▼ 変更箇所 ▼▼▼
         function speak(t, e, o){
             window.speechSynthesis.cancel();
             const n = new SpeechSynthesisUtterance(t);
-            n.lang = e;
+            n.lang = e; // まず言語を設定
             
-            // 言語に応じて準備したGoogle音声を指定する
-            if (e === 'ja-JP' && googleJaVoice) {
-                n.voice = googleJaVoice;
-            } else if (e === 'en-US' && googleEnVoice) {
-                n.voice = googleEnVoice;
+            // iPhone/iPad/iPodなどのApple製モバイル端末か判別
+            const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            // Apple製端末でなければGoogle音声を探す。
+            // Apple製端末の場合は、OSに声の選択を完全に任せる（Siri品質の声を優先させるため）。
+            if (!isAppleMobile) {
+                if (e === 'ja-JP' && googleJaVoice) {
+                    n.voice = googleJaVoice;
+                } else if (e === 'en-US' && googleEnVoice) {
+                    n.voice = googleEnVoice;
+                }
             }
             
             if ("function" == typeof o) n.onend = o;
             window.speechSynthesis.speak(n);
         }
-        // ▲▲▲ 変更箇所2 ▲▲▲
+        // ▲▲▲ 変更箇所 ▲▲▲
         
         function autoPlayFlow(){
             if(!isAutoPlaying||0===currentWords.length)return;
